@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f0f0f0;
         }
         h1 {
             text-align: center;
@@ -15,18 +16,26 @@
         }
         form {
             max-width: 500px;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         label {
+            display: block;
             margin-top: 10px;
             font-weight: bold;
+            color: #555;
         }
         input, select, button {
+            width: 100%;
             margin-top: 5px;
-            padding: 8px;
+            padding: 10px;
             font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
         button {
             margin-top: 15px;
@@ -34,12 +43,19 @@
             color: #fff;
             border: none;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #0056b3;
         }
         #customDestinationDiv {
             display: none;
+        }
+        .referral-box {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -49,11 +65,13 @@
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
         
-        <label for="referral">Referral Code:</label>
-        <input type="text" id="referral" name="referral">
+        <div class="referral-box">
+            <label for="referral">Referral Code:</label>
+            <input type="text" id="referral" name="referral" placeholder="Enter referral code (if any)">
+        </div>
 
         <label for="phone">Phone:</label>
-        <input type="text" id="phone" name="phone" required>
+        <input type="tel" id="phone" name="phone" required>
 
         <label for="location">Your Location:</label>
         <input type="text" id="location" name="location" required>
@@ -132,7 +150,8 @@
             .then(response => response.text())
             .then(data => {
                 console.log('Success:', data);
-                window.location.href = 'thank_you.html';
+                alert('Ambulance booked successfully!');
+                form.reset();
             })
             .catch((error) => {
                 console.error('Error:', error);
