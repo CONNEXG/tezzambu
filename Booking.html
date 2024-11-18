@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Ambulance</title>
-  
+    <style>
+        /* Style to hide the custom destination field by default */
+        #customDestinationDiv {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Book an Ambulance</h1>
@@ -13,9 +18,9 @@
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
         
+        <!-- Referral Code -->
         <label for="referral">Referral Code:</label>
-<input type="text" id="referral" name="referral">
-
+        <input type="text" id="referral" name="referral">
 
         <!-- Phone field -->
         <label for="phone">Phone:</label>
@@ -26,7 +31,7 @@
         <input type="text" id="location" name="location" required>
         <button type="button" onclick="getLocation()">Use Current Location</button>
 
-        <!-- Destination select field -->
+        <!-- Destination field -->
         <label for="destination">Select Destination:</label>
         <select id="destination" name="destination" required>
             <option value="">Select</option>
@@ -63,9 +68,10 @@
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
-                    document.getElementById('location').value = `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
-                }, function() {
-                    alert("Unable to retrieve your location.");
+                    document.getElementById('location').value = 
+                        `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
+                }, function(error) {
+                    alert("Unable to retrieve your location: " + error.message);
                 });
             } else {
                 alert("Geolocation is not supported by this browser.");
@@ -74,36 +80,34 @@
 
         // Show custom destination input if "Enter Manually" is selected
         document.getElementById('destination').addEventListener('change', function() {
-            if (this.value === 'custom') {
-                document.getElementById('customDestinationDiv').style.display = 'block';
-            } else {
-                document.getElementById('customDestinationDiv').style.display = 'none';
-            }
+            const customDiv = document.getElementById('customDestinationDiv');
+            customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
         });
 
         // Handle form submission
         function submitForm(event) {
             event.preventDefault(); // Prevent default form submission
 
-            // Use FormData to gather form data
-            const formData = new FormData(document.getElementById('ambulanceForm'));
+            const form = document.getElementById('ambulanceForm');
+            const formData = new FormData(form);
 
             // Send data to Google Apps Script
             fetch('https://script.google.com/macros/s/AKfycbzwaX2ez6-PzMNzHvX8YYESYvIRRuRlC-5uyh25WCxgla7oDGgf60B4zeIP1gPiIXU/exec', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     // Redirect to thank you page
                     window.location.href = 'thank_you.html';
                 } else {
-                    alert("There was an error booking the ambulance.");
+                    alert("Error: " + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("There was an error booking the ambulance.");
+                alert("There was an error booking the ambulance. Please try again later.");
             });
 
             return false; // Prevent default form submission
