@@ -5,7 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Ambulance</title>
     <style>
-        /* Style to hide the custom destination field by default */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            max-width: 500px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input, select, button {
+            margin-top: 5px;
+            padding: 8px;
+            font-size: 1rem;
+        }
+        button {
+            margin-top: 15px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
         #customDestinationDiv {
             display: none;
         }
@@ -14,24 +46,19 @@
 <body>
     <h1>Book an Ambulance</h1>
     <form id="ambulanceForm" onsubmit="return submitForm(event)">
-        <!-- Name field -->
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
         
-        <!-- Referral Code -->
         <label for="referral">Referral Code:</label>
         <input type="text" id="referral" name="referral">
 
-        <!-- Phone field -->
         <label for="phone">Phone:</label>
         <input type="text" id="phone" name="phone" required>
 
-        <!-- Location field -->
         <label for="location">Your Location:</label>
         <input type="text" id="location" name="location" required>
         <button type="button" onclick="getLocation()">Use Current Location</button>
 
-        <!-- Destination field -->
         <label for="destination">Select Destination:</label>
         <select id="destination" name="destination" required>
             <option value="">Select</option>
@@ -51,66 +78,63 @@
             <input type="text" id="customDestination" name="customDestination" placeholder="Enter Destination Manually">
         </div>
 
-        <!-- Date field -->
         <label for="ambulanceDate">Date:</label>
         <input type="date" id="ambulanceDate" name="ambulanceDate" required>
 
-        <!-- Time field -->
         <label for="ambulanceTime">Time:</label>
         <input type="time" id="ambulanceTime" name="ambulanceTime" required>
 
-        <!-- Submit button -->
         <button type="submit">Book Ambulance</button>
     </form>
 
     <script>
-        // Function to get user's current location
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    document.getElementById('location').value = 
-                        `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
-                }, function(error) {
-                    alert("Unable to retrieve your location: " + error.message);
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const latitude = position.coords.latitude.toFixed(6);
+                    const longitude = position.coords.longitude.toFixed(6);
+                    document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
+                }, function (error) {
+                    alert(`Error fetching location: ${error.message}`);
                 });
             } else {
-                alert("Geolocation is not supported by this browser.");
+                alert("Geolocation is not supported by your browser.");
             }
         }
 
-        // Show custom destination input if "Enter Manually" is selected
-        document.getElementById('destination').addEventListener('change', function() {
+        document.getElementById('destination').addEventListener('change', function () {
             const customDiv = document.getElementById('customDestinationDiv');
-            customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+            if (this.value === 'custom') {
+                customDiv.style.display = 'block';
+                document.getElementById('customDestination').required = true;
+            } else {
+                customDiv.style.display = 'none';
+                document.getElementById('customDestination').required = false;
+            }
         });
 
-        // Handle form submission
         function submitForm(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
-            const form = document.getElementById('ambulanceForm');
-            const formData = new FormData(form);
+            const formData = new FormData(document.getElementById('ambulanceForm'));
 
-            // Send data to Google Apps Script
             fetch('https://script.google.com/macros/s/AKfycbzwaX2ez6-PzMNzHvX8YYESYvIRRuRlC-5uyh25WCxgla7oDGgf60B4zeIP1gPiIXU/exec', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to thank you page
+            .then(response => {
+                if (response.ok) {
                     window.location.href = 'thank_you.html';
                 } else {
-                    alert("Error: " + data.message);
+                    alert("There was an error booking the ambulance. Please try again later.");
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("There was an error booking the ambulance. Please try again later.");
+                alert("There was an error booking the ambulance: " + error.message);
             });
 
-            return false; // Prevent default form submission
+            return false;
         }
     </script>
 </body>
