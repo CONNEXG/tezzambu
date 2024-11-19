@@ -5,69 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Ambulance</title>
 </head>
-    <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f0f0f0;
-}
-h1 {
-    text-align: center;
-    color: #333;
-}
-form {
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-    color: #555;
-}
-input, select, button {
-    width: 100%;
-    margin-top: 5px;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-button {
-    margin-top: 15px;
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-button:hover {
-    background-color: #0056b3;
-}
-#customDestinationDiv {
-    display: none;
-}
-.referral-box {
-    background-color: #e9ecef;
-    padding: 10px;
-    border-radius: 4px;
-    margin-top: 10px;
-}
-</style>
 <body>
     <h1>Book an Ambulance</h1>
     <form id="ambulanceForm" onsubmit="return submitForm(event)">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
 
-      <label for="email">:</label>
-        <label for="referral">Referral Code:</label>
-            <input type="text" id="referral" name="referral" placeholder="Enter referral code (if any)">
+        <!-- Updated to use Referral Code -->
+        <label for="referralCode">Referral Code:</label>
+        <input type="text" id="referralCode" name="referralCode" placeholder="Enter your referral code" required>
 
         <label for="phone">Phone:</label>
         <input type="tel" id="phone" name="phone" required>
@@ -91,7 +37,7 @@ button:hover {
             <option value="S.E. Railway Hospital">S.E. Railway Hospital</option>
             <option value="custom">Enter Manually</option>
         </select>
-        <div id="customDestinationDiv">
+        <div id="customDestinationDiv" style="display: none;">
             <input type="text" id="customDestination" name="customDestination" placeholder="Enter Destination Manually">
         </div>
 
@@ -139,7 +85,7 @@ button:hover {
             // Convert FormData to URL-encoded string
             const urlEncodedData = new URLSearchParams(formData).toString();
 
-            fetch('https://script.google.com/macros/s/AKfycbyu3NvOpIgrP2MpQfCLXZKKzZXuz_P7DK_wFsYJ7jemA2U-Nc-qkcXD9f6D9JCU3C3A/exec', {
+            fetch('https://script.google.com/macros/s/AKfycbzGDIeRl8Nr-YyDLW-VyNo_-d-mGk5kKQBboec4cnMizBMwVk4V34BXimq6dcGhP1hX/exec', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
