@@ -95,18 +95,24 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        #successMessage {
+        #successMessage, #errorMessage {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #4CAF50;
-            color: white;
             padding: 20px;
             border-radius: 5px;
             text-align: center;
             z-index: 1001;
+        }
+        #successMessage {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #errorMessage {
+            background-color: #f44336;
+            color: white;
         }
         #locationButton {
             display: flex;
@@ -170,6 +176,7 @@
     </div>
 
     <div id="successMessage">Ambulance booked successfully!</div>
+    <div id="errorMessage"></div>
 
     <script>
         function getLocation() {
@@ -246,6 +253,7 @@
             const submitButton = document.getElementById('submitButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
 
             // Show loading overlay and disable submit button
             loadingOverlay.style.display = 'block';
@@ -262,9 +270,15 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(jsonData)
+                body: JSON.stringify(jsonData),
+                mode: 'cors'
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
             .then(data => {
                 console.log('Success:', data);
                 // Hide loading overlay
@@ -279,11 +293,18 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert("There was an error booking the ambulance: " + error.message);
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+                // Show error message
+                errorMessage.textContent = "There was an error booking the ambulance. Please try again later or contact support.";
+                errorMessage.style.display = 'block';
+                // Hide error message after 5 seconds
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
             })
             .finally(() => {
-                // Hide loading overlay and re-enable submit button
-                loadingOverlay.style.display = 'none';
+                // Re-enable submit button
                 submitButton.disabled = false;
             });
         });
