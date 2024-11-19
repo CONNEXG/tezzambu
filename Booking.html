@@ -4,23 +4,135 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Ambulance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 15px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #customDestinationDiv {
+            display: none;
+        }
+        .referral-box {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        #loadingMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #007BFF;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        #successMessage {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 1001;
+        }
+        #locationButton {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <h1>Book an Ambulance</h1>
-    <form id="ambulanceForm" onsubmit="return submitForm(event)">
+    <form id="ambulanceForm">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
 
         <label for="referralCode">Referral Code:</label>
-<input type="text" id="referralCode" name="referralCode" placeholder="Enter your referral code (optional)">
-
+        <input type="text" id="referralCode" name="referralCode" placeholder="Enter your referral code (optional)">
 
         <label for="phone">Phone:</label>
         <input type="tel" id="phone" name="phone" required>
 
         <label for="location">Your Location:</label>
         <input type="text" id="location" name="location" required>
-        <button type="button" onclick="getLocation()">Use Current Location</button>
+        <button type="button" id="locationButton" onclick="getLocation()">
+            <span id="locationSpinner" class="spinner" style="display: none;"></span>
+            <span id="locationButtonText">Use Current Location</span>
+        </button>
 
         <label for="destination">Select Destination:</label>
         <select id="destination" name="destination" required>
@@ -37,7 +149,7 @@
             <option value="S.E. Railway Hospital">S.E. Railway Hospital</option>
             <option value="custom">Enter Manually</option>
         </select>
-        <div id="customDestinationDiv" style="display: none;">
+        <div id="customDestinationDiv">
             <input type="text" id="customDestination" name="customDestination" placeholder="Enter Destination Manually">
         </div>
 
@@ -47,22 +159,72 @@
         <label for="ambulanceTime">Time:</label>
         <input type="time" id="ambulanceTime" name="ambulanceTime" required>
 
-        <button type="submit">Book Ambulance</button>
+        <button type="submit" id="submitButton">Book Ambulance</button>
     </form>
+
+    <div id="loadingOverlay">
+        <div id="loadingMessage">
+            <div class="spinner"></div>
+            <p>Booking your ambulance...</p>
+        </div>
+    </div>
+
+    <div id="successMessage">Ambulance booked successfully!</div>
 
     <script>
         function getLocation() {
+            const locationButton = document.getElementById('locationButton');
+            const locationSpinner = document.getElementById('locationSpinner');
+            const locationButtonText = document.getElementById('locationButtonText');
+
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    const latitude = position.coords.latitude.toFixed(6);
-                    const longitude = position.coords.longitude.toFixed(6);
-                    document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
-                }, function (error) {
-                    alert(`Error fetching location: ${error.message}`);
+                locationButton.disabled = true;
+                locationSpinner.style.display = 'inline-block';
+                locationButtonText.textContent = 'Getting Location...';
+
+                navigator.geolocation.getCurrentPosition(showPosition, showError, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
                 });
             } else {
-                alert("Geolocation is not supported by your browser.");
+                alert("Geolocation is not supported by this browser.");
             }
+        }
+
+        function showPosition(position) {
+            const latitude = position.coords.latitude.toFixed(6);
+            const longitude = position.coords.longitude.toFixed(6);
+            document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
+            resetLocationButton();
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("Please allow location access to use this feature. You may need to refresh the page to see the permission prompt again.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+            resetLocationButton();
+        }
+
+        function resetLocationButton() {
+            const locationButton = document.getElementById('locationButton');
+            const locationSpinner = document.getElementById('locationSpinner');
+            const locationButtonText = document.getElementById('locationButtonText');
+
+            locationButton.disabled = false;
+            locationSpinner.style.display = 'none';
+            locationButtonText.textContent = 'Use Current Location';
         }
 
         document.getElementById('destination').addEventListener('change', function () {
@@ -76,11 +238,18 @@
             }
         });
 
-        function submitForm(event) {
+        document.getElementById('ambulanceForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const form = document.getElementById('ambulanceForm');
+            const form = event.target;
             const formData = new FormData(form);
+            const submitButton = document.getElementById('submitButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const successMessage = document.getElementById('successMessage');
+
+            // Show loading overlay and disable submit button
+            loadingOverlay.style.display = 'block';
+            submitButton.disabled = true;
 
             // Convert FormData to URL-encoded string
             const urlEncodedData = new URLSearchParams(formData).toString();
@@ -95,70 +264,26 @@
             .then(response => response.text())
             .then(data => {
                 console.log('Success:', data);
-                alert('Ambulance booked successfully!');
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+                // Show success message
+                successMessage.style.display = 'block';
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
                 form.reset();
             })
             .catch((error) => {
                 console.error('Error:', error);
                 alert("There was an error booking the ambulance: " + error.message);
+            })
+            .finally(() => {
+                // Hide loading overlay and re-enable submit button
+                loadingOverlay.style.display = 'none';
+                submitButton.disabled = false;
             });
-
-            return false;
-        }
+        });
     </script>
-    <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f0f0f0;
-}
-h1 {
-    text-align: center;
-    color: #333;
-}
-form {
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-    color: #555;
-}
-input, select, button {
-    width: 100%;
-    margin-top: 5px;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-button {
-    margin-top: 15px;
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-button:hover {
-    background-color: #0056b3;
-}
-#customDestinationDiv {
-    display: none;
-}
-.referral-box {
-    background-color: #e9ecef;
-    padding: 10px;
-    border-radius: 4px;
-    margin-top: 10px;
-}
-</style>
 </body>
 </html>
