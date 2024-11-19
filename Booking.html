@@ -193,9 +193,9 @@
         }
 
         function showPosition(position) {
-            const latitude = position.coords.latitude.toFixed(6);
-            const longitude = position.coords.longitude.toFixed(6);
-            document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            document.getElementById('location').value = `${latitude}, ${longitude}`;
             resetLocationButton();
         }
 
@@ -251,15 +251,18 @@
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;
 
-            // Convert FormData to URL-encoded string
-            const urlEncodedData = new URLSearchParams(formData).toString();
+            // Convert FormData to JSON
+            const jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
 
             fetch('https://script.google.com/macros/s/AKfycbwSUZXZkIYX3RVtpGnY8oQqvubM1-VfnDomRujDTQ6sTiU3SY3AMNLZk2TTysS6iqI/exec', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: urlEncodedData
+                body: JSON.stringify(jsonData)
             })
             .then(response => response.text())
             .then(data => {
