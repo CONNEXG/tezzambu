@@ -95,24 +95,18 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        #successMessage, #errorMessage {
+        #successMessage {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            background-color: #4CAF50;
+            color: white;
             padding: 20px;
             border-radius: 5px;
             text-align: center;
             z-index: 1001;
-        }
-        #successMessage {
-            background-color: #4CAF50;
-            color: white;
-        }
-        #errorMessage {
-            background-color: #f44336;
-            color: white;
         }
         #locationButton {
             display: flex;
@@ -176,7 +170,6 @@
     </div>
 
     <div id="successMessage">Ambulance booked successfully!</div>
-    <div id="errorMessage"></div>
 
     <script>
         function getLocation() {
@@ -200,9 +193,9 @@
         }
 
         function showPosition(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            document.getElementById('location').value = `${latitude}, ${longitude}`;
+            const latitude = position.coords.latitude.toFixed(6);
+            const longitude = position.coords.longitude.toFixed(6);
+            document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
             resetLocationButton();
         }
 
@@ -253,32 +246,22 @@
             const submitButton = document.getElementById('submitButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
-            const errorMessage = document.getElementById('errorMessage');
 
             // Show loading overlay and disable submit button
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;
 
-            // Convert FormData to JSON
-            const jsonData = {};
-            formData.forEach((value, key) => {
-                jsonData[key] = value;
-            });
+            // Convert FormData to URL-encoded string
+            const urlEncodedData = new URLSearchParams(formData).toString();
 
             fetch('https://script.google.com/macros/s/AKfycbwSUZXZkIYX3RVtpGnY8oQqvubM1-VfnDomRujDTQ6sTiU3SY3AMNLZk2TTysS6iqI/exec', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify(jsonData),
-                mode: 'cors'
+                body: urlEncodedData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
+            .then(response => response.text())
             .then(data => {
                 console.log('Success:', data);
                 // Hide loading overlay
@@ -293,18 +276,11 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
-                // Hide loading overlay
-                loadingOverlay.style.display = 'none';
-                // Show error message
-                errorMessage.textContent = "There was an error booking the ambulance. Please try again later or contact support.";
-                errorMessage.style.display = 'block';
-                // Hide error message after 5 seconds
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 5000);
+                alert("There was an error booking the ambulance: " + error.message);
             })
             .finally(() => {
-                // Re-enable submit button
+                // Hide loading overlay and re-enable submit button
+                loadingOverlay.style.display = 'none';
                 submitButton.disabled = false;
             });
         });
