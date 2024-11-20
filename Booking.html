@@ -113,6 +113,11 @@
             align-items: center;
             justify-content: center;
         }
+        #locationError {
+            color: red;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -133,6 +138,7 @@
             <span id="locationSpinner" class="spinner" style="display: none;"></span>
             <span id="locationButtonText">Use Current Location</span>
         </button>
+        <div id="locationError"></div>
 
         <label for="destination">Select Destination:</label>
         <select id="destination" name="destination" required>
@@ -172,23 +178,49 @@
     <div id="successMessage">Ambulance booked successfully!</div>
 
     <script>
+        let locationWatchId = null;
+
         function getLocation() {
             const locationButton = document.getElementById('locationButton');
             const locationSpinner = document.getElementById('locationSpinner');
             const locationButtonText = document.getElementById('locationButtonText');
+            const locationError = document.getElementById('locationError');
 
             if (navigator.geolocation) {
                 locationButton.disabled = true;
                 locationSpinner.style.display = 'inline-block';
                 locationButtonText.textContent = 'Getting Location...';
+                locationError.style.display = 'none';
 
-                navigator.geolocation.getCurrentPosition(showPosition, showError, {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                });
+                // Clear any existing watch
+                if (locationWatchId !== null) {
+                    navigator.geolocation.clearWatch(locationWatchId);
+                }
+
+                // Start watching position
+                locationWatchId = navigator.geolocation.watchPosition(
+                    showPosition,
+                    showError,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+
+                // Set a timeout to stop watching after 10 seconds
+                setTimeout(() => {
+                    if (locationWatchId !== null) {
+                        navigator.geolocation.clearWatch(locationWatchId);
+                        locationWatchId = null;
+                        if (document.getElementById('location').value === '') {
+                            showError({ code: 3, message: "Timeout: Couldn't get accurate location." });
+                        }
+                    }
+                }, 10000);
             } else {
-                alert("Geolocation is not supported by this browser.");
+                locationError.textContent = "Geolocation is not supported by this browser.";
+                locationError.style.display = 'block';
             }
         }
 
@@ -196,24 +228,32 @@
             const latitude = position.coords.latitude.toFixed(6);
             const longitude = position.coords.longitude.toFixed(6);
             document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
-            resetLocationButton();
+            
+            // If accuracy is good enough, stop watching
+            if (position.coords.accuracy <= 100) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+                resetLocationButton();
+            }
         }
 
         function showError(error) {
+            const locationError = document.getElementById('locationError');
             switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    alert("Please allow location access to use this feature. You may need to refresh the page to see the permission prompt again.");
+                    locationError.textContent = "Please allow location access to use this feature.";
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    alert("Location information is unavailable.");
+                    locationError.textContent = "Location information is unavailable.";
                     break;
                 case error.TIMEOUT:
-                    alert("The request to get user location timed out.");
+                    locationError.textContent = "The request to get user location timed out.";
                     break;
-                case error.UNKNOWN_ERROR:
-                    alert("An unknown error occurred.");
+                default:
+                    locationError.textContent = "An unknown error occurred while getting location.";
                     break;
             }
+            locationError.style.display = 'block';
             resetLocationButton();
         }
 
