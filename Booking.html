@@ -185,6 +185,7 @@
             const locationSpinner = document.getElementById('locationSpinner');
             const locationButtonText = document.getElementById('locationButtonText');
             const locationError = document.getElementById('locationError');
+            const locationInput = document.getElementById('location');
 
             if (navigator.geolocation) {
                 locationButton.disabled = true;
@@ -199,7 +200,16 @@
 
                 // Start watching position
                 locationWatchId = navigator.geolocation.watchPosition(
-                    showPosition,
+                    (position) => {
+                        const latitude = position.coords.latitude.toFixed(6);
+                        const longitude = position.coords.longitude.toFixed(6);
+                        locationInput.value = `Lat: ${latitude}, Lon: ${longitude}`;
+                        
+                        // If accuracy is good enough, stop watching
+                        if (position.coords.accuracy <= 100) {
+                            stopLocationWatch();
+                        }
+                    },
                     showError,
                     {
                         enableHighAccuracy: true,
@@ -211,9 +221,8 @@
                 // Set a timeout to stop watching after 10 seconds
                 setTimeout(() => {
                     if (locationWatchId !== null) {
-                        navigator.geolocation.clearWatch(locationWatchId);
-                        locationWatchId = null;
-                        if (document.getElementById('location').value === '') {
+                        stopLocationWatch();
+                        if (locationInput.value === '') {
                             showError({ code: 3, message: "Timeout: Couldn't get accurate location." });
                         }
                     }
@@ -224,13 +233,8 @@
             }
         }
 
-        function showPosition(position) {
-            const latitude = position.coords.latitude.toFixed(6);
-            const longitude = position.coords.longitude.toFixed(6);
-            document.getElementById('location').value = `Lat: ${latitude}, Lon: ${longitude}`;
-            
-            // If accuracy is good enough, stop watching
-            if (position.coords.accuracy <= 100) {
+        function stopLocationWatch() {
+            if (locationWatchId !== null) {
                 navigator.geolocation.clearWatch(locationWatchId);
                 locationWatchId = null;
                 resetLocationButton();
