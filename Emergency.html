@@ -52,9 +52,6 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        #customDestinationDiv {
-            display: none;
-        }
         .referral-box {
             background-color: #e9ecef;
             padding: 10px;
@@ -140,31 +137,6 @@
         </button>
         <div id="locationError"></div>
 
-<!--         <label for="destination">Select Destination:</label>
-        <select id="destination" name="destination" required>
-            <option value="">Select</option>
-            <option value="Tata Main Hospital">Tata Main Hospital</option>
-            <option value="MGM Medical College and Hospital">MGM Medical College and Hospital</option>
-            <option value="Brahmananda Narayana Multispeciality Hospital">Brahmananda Narayana Multispeciality Hospital</option>
-            <option value="Mercy Hospital">Mercy Hospital</option>
-            <option value="Jamshedpur Eye Hospital">Jamshedpur Eye Hospital</option>
-            <option value="Gurunanak Hospital and Research Centre">Gurunanak Hospital and Research Centre</option>
-            <option value="Telco Hospital">Telco Hospital</option>
-            <option value="Kantilal Gandhi Eye Hospital">Kantilal Gandhi Eye Hospital</option>
-            <option value="Tinplate Hospital">Tinplate Hospital</option>
-            <option value="S.E. Railway Hospital">S.E. Railway Hospital</option>
-            <option value="custom">Enter Manually</option>
-        </select>
-        <div id="customDestinationDiv">
-            <input type="text" id="customDestination" name="customDestination" placeholder="Enter Destination Manually">
-        </div> -->
-
-<!--         <label for="ambulanceDate">Date:</label>
-        <input type="date" id="ambulanceDate" name="ambulanceDate" required>
-
-        <label for="ambulanceTime">Time:</label>
-        <input type="time" id="ambulanceTime" name="ambulanceTime" required> -->
-
         <button type="submit" id="submitButton">Book Ambulance</button>
     </form>
 
@@ -193,19 +165,16 @@
                 locationButtonText.textContent = 'Getting Location...';
                 locationError.style.display = 'none';
 
-                // Clear any existing watch
                 if (locationWatchId !== null) {
                     navigator.geolocation.clearWatch(locationWatchId);
                 }
 
-                // Start watching position
                 locationWatchId = navigator.geolocation.watchPosition(
                     (position) => {
                         const latitude = position.coords.latitude.toFixed(6);
                         const longitude = position.coords.longitude.toFixed(6);
                         locationInput.value = `Lat: ${latitude}, Lon: ${longitude}`;
                         
-                        // If accuracy is good enough, stop watching
                         if (position.coords.accuracy <= 100) {
                             stopLocationWatch();
                         }
@@ -218,7 +187,6 @@
                     }
                 );
 
-                // Set a timeout to stop watching after 10 seconds
                 setTimeout(() => {
                     if (locationWatchId !== null) {
                         stopLocationWatch();
@@ -271,17 +239,6 @@
             locationButtonText.textContent = 'Use Current Location';
         }
 
-        document.getElementById('destination').addEventListener('change', function () {
-            const customDiv = document.getElementById('customDestinationDiv');
-            if (this.value === 'custom') {
-                customDiv.style.display = 'block';
-                document.getElementById('customDestination').required = true;
-            } else {
-                customDiv.style.display = 'none';
-                document.getElementById('customDestination').required = false;
-            }
-        });
-
         document.getElementById('ambulanceForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -291,11 +248,9 @@
             const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
 
-            // Show loading overlay and disable submit button
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;
 
-            // Convert FormData to URL-encoded string
             const urlEncodedData = new URLSearchParams(formData).toString();
 
             fetch('https://script.google.com/macros/s/AKfycbwSUZXZkIYX3RVtpGnY8oQqvubM1-VfnDomRujDTQ6sTiU3SY3AMNLZk2TTysS6iqI/exec', {
@@ -308,11 +263,8 @@
             .then(response => response.text())
             .then(data => {
                 console.log('Success:', data);
-                // Hide loading overlay
                 loadingOverlay.style.display = 'none';
-                // Show success message
                 successMessage.style.display = 'block';
-                // Hide success message after 3 seconds
                 setTimeout(() => {
                     successMessage.style.display = 'none';
                 }, 3000);
@@ -323,7 +275,6 @@
                 alert("There was an error booking the ambulance: " + error.message);
             })
             .finally(() => {
-                // Hide loading overlay and re-enable submit button
                 loadingOverlay.style.display = 'none';
                 submitButton.disabled = false;
             });
