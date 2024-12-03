@@ -115,6 +115,17 @@
             margin-top: 5px;
             display: none;
         }
+        #phoneNumber {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #phoneNumber a {
+            font-size: 24px;
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +150,10 @@
 
         <button type="submit" id="submitButton">Book Ambulance</button>
     </form>
+
+    <div id="phoneNumber">
+        <a href="tel:+919153079210">Contact: +91 9153079210</a>
+    </div>
 
     <div id="loadingOverlay">
         <div id="loadingMessage">
@@ -247,6 +262,7 @@
             const submitButton = document.getElementById('submitButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
+            const phoneNumber = document.getElementById('phoneNumber');
 
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;
@@ -265,8 +281,10 @@
                 console.log('Success:', data);
                 loadingOverlay.style.display = 'none';
                 successMessage.style.display = 'block';
+                phoneNumber.style.display = 'block';
                 setTimeout(() => {
                     successMessage.style.display = 'none';
+                    window.location.href = 'tel:+919153079210';
                 }, 3000);
                 form.reset();
             })
