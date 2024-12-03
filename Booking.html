@@ -118,6 +118,17 @@
             margin-top: 5px;
             display: none;
         }
+        #phoneNumber {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #phoneNumber a {
+            font-size: 24px;
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -168,6 +179,10 @@
         <button type="submit" id="submitButton">Book Ambulance</button>
     </form>
 
+    <div id="phoneNumber">
+        <a href="tel:+919153079210">Contact: +91 9153079210</a>
+    </div>
+
     <div id="loadingOverlay">
         <div id="loadingMessage">
             <div class="spinner"></div>
@@ -193,19 +208,16 @@
                 locationButtonText.textContent = 'Getting Location...';
                 locationError.style.display = 'none';
 
-                // Clear any existing watch
                 if (locationWatchId !== null) {
                     navigator.geolocation.clearWatch(locationWatchId);
                 }
 
-                // Start watching position
                 locationWatchId = navigator.geolocation.watchPosition(
                     (position) => {
                         const latitude = position.coords.latitude.toFixed(6);
                         const longitude = position.coords.longitude.toFixed(6);
                         locationInput.value = `Lat: ${latitude}, Lon: ${longitude}`;
                         
-                        // If accuracy is good enough, stop watching
                         if (position.coords.accuracy <= 100) {
                             stopLocationWatch();
                         }
@@ -218,7 +230,6 @@
                     }
                 );
 
-                // Set a timeout to stop watching after 10 seconds
                 setTimeout(() => {
                     if (locationWatchId !== null) {
                         stopLocationWatch();
@@ -290,12 +301,11 @@
             const submitButton = document.getElementById('submitButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const successMessage = document.getElementById('successMessage');
+            const phoneNumber = document.getElementById('phoneNumber');
 
-            // Show loading overlay and disable submit button
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;
 
-            // Convert FormData to URL-encoded string
             const urlEncodedData = new URLSearchParams(formData).toString();
 
             fetch('https://script.google.com/macros/s/AKfycbwSUZXZkIYX3RVtpGnY8oQqvubM1-VfnDomRujDTQ6sTiU3SY3AMNLZk2TTysS6iqI/exec', {
@@ -308,13 +318,12 @@
             .then(response => response.text())
             .then(data => {
                 console.log('Success:', data);
-                // Hide loading overlay
                 loadingOverlay.style.display = 'none';
-                // Show success message
                 successMessage.style.display = 'block';
-                // Hide success message after 3 seconds
+                phoneNumber.style.display = 'block';
                 setTimeout(() => {
                     successMessage.style.display = 'none';
+                    window.location.href = 'tel:+919153079210';
                 }, 3000);
                 form.reset();
             })
@@ -323,7 +332,6 @@
                 alert("There was an error booking the ambulance: " + error.message);
             })
             .finally(() => {
-                // Hide loading overlay and re-enable submit button
                 loadingOverlay.style.display = 'none';
                 submitButton.disabled = false;
             });
